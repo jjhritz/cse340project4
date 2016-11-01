@@ -445,31 +445,81 @@ void print_expression_prefix(struct exprNode* expr)
 void print_while_stmt(struct while_stmtNode* while_stmt)
 {
     // TODO: implement this for your own debugging purposes
+    //print "WHILE "
+
+    //print condition
+
+    //print body
 }
 
 void print_do_stmt(struct while_stmtNode* do_stmt)
 {
     // TODO: implement this for your own debugging purposes
+    //print "DO "
+
+    //print body
+
+    //print "WHILE "
+    //print condition
+    //print semicolon
 }
 
 void print_condition(struct conditionNode* condition)
 {
     // TODO: implement this for your own debugging purposes
+    //if while_stmt->condition->relop is NOOP, the condition is just an ID
+        //if while_stmt->condition->left_operand->tag is NUM
+            //print while_stmt->condition->left_operand->ival + " "
+        //else if while_stmt->condition->left_operand->tag is REALNUM
+            //print while_stmt->condition->left_operand->i=fval + " "
+        //else if while_stmt->condition->left_operand->tag is ID
+            //print while_stmt->condition->left_operand->id + " "
+        //endif
+    //else, condition is a comparison
+        //if while_stmt->condition->left_operand->tag is NUM
+            //print while_stmt->condition->left_operand->ival + " "
+        //else if while_stmt->condition->left_operand->tag is REALNUM
+            //print while_stmt->condition->left_operand->i=fval + " "
+        //else if while_stmt->condition->left_operand->tag is ID
+            //print while_stmt->condition->left_operand->id + " "
+        //endif
+
+        //print operator reserved[while_stmt->condition->relop]
+
+        //if while_stmt->condition->right_operand->tag is NUM
+            //print while_stmt->condition->right_operand->ival + " "
+        //else if while_stmt->condition->right_operand->tag is REALNUM
+            //print while_stmt->condition->right_operand->i=fval + " "
+        //else if while_stmt->condition->right_operand->tag is ID
+            //print while_stmt->condition->right_operand->id + " "
+        //endif
+    //endif
 }
 
 void print_case(struct caseNode* cas)
 {
     // TODO: implement this for your own debugging purposes
+    //print "CASE "
+    //print cast->num + " "
+    //print colon + " "
+    //print body
 }
 
 void print_case_list(struct case_listNode* case_list)
 {
     // TODO: implement this for your own debugging purposes
+    //print case_list->cas
+    //print case_list->case_list
 }
 
 void print_switch_stmt(struct switch_stmtNode* switc)
 {
     // TODO: implement this for your own debugging purposes
+    //print "SWITCH "
+    //print switc->id + " "
+    //print LBRACE + "\n"
+    //print case_list
+    //print RBRACE + "\n"
 }
 
 /* -------------------- PARSING AND BUILDING PARSE TREE -------------------- */
@@ -478,43 +528,372 @@ void print_switch_stmt(struct switch_stmtNode* switc)
 // called case because case is a keyword in C/C++
 struct caseNode* cas()
 {
+    /*
+    struct caseNode
+    {
+        int num;
+        struct bodyNode* body;	// body of the case
+    };
+     */
+
     // TODO: implement this for extra credit
+
+    //create node
+    struct caseNode* case_node;
+
+    /**parse CASE keyword**/
+    //get token
+
+    //if token is CASE
+        //alloc case_node on stack
+
+        /**parse case NUM**/
+        //get token
+
+        //if token is NUM
+            //convert token to integer
+            //set case_node->num to converted token
+
+            /**parse COLON**/
+            //get token
+
+            //if token is COLON
+                /**parse body node**/
+                //get token
+
+                //if token is LBRACE
+                    //unget token
+                    //set case_node->body to body()
+                    //return case_node
+                //else
+                    //syntax error
+                //endif
+            //else
+                //syntax error
+            //endif
+        //else
+            //syntax error
+        //endif
+    //else
+        //syntax error
+    //endif
+
+
     return NULL;
 }
 
 struct case_listNode* case_list()
 {
+    /*
+    struct case_listNode
+    {
+        struct caseNode* cas;	// case is a keyword in C/C++
+        struct case_listNode* case_list;
+    };
+     */
+
     // TODO: implement this for extra credit
+
+    //create node
+    struct case_listNode* case_list_node;
+
+    /**parse CASE keyword**/
+    //get token
+
+    //if token is CASE
+        //alloc node on stack
+
+        /**parse case node**/
+        //unget token
+        //set case_list_node->case to cas()
+
+        /**parse case list node**/
+        //get token
+
+        //if token is CASE
+            //unget token
+            //set case_list_node->case_list to case_list()
+        //else
+            //unget token
+            //return case_list_node
+        //endif
+
+    //else
+        //syntax error
+    //endif
+
+
+
     return NULL;
 }
 
 struct switch_stmtNode* switch_stmt()
 {
+    /*
+    struct switch_stmtNode
+    {
+        char* id;
+        struct case_listNode* case_list;
+    };
+    */
+
     // TODO: implement this for extra credit
+
+    //create node
+    struct switch_stmtNode* switch_stm;
+
+    /**parse SWITCH keyword**/
+    //get token
+
+    //if token is SWITCH
+        /**parse ID**/
+        //get token
+
+        //if type is ID
+            //copy token into switch_stm->id;
+
+            /**parse LBRACE**/
+            //get token
+
+            //if token is LBRACE
+                /**parse case list**/
+                //get token
+
+                //if token is CASE
+                    //unget token
+                    //set switch_stm->case_list = case_list()
+
+                    /**parse RBRACE**/
+                    //get token
+
+                    //if token is RBRACE
+                        //return switch_stm
+                    //else
+                        //syntax error
+                    //endif
+                //else
+                    //syntax error
+                //endif
+            //else
+                //syntax error
+            //endif
+        //else
+            //syntax error
+        //endif
+    //else
+        //syntax error
+    //endif
+
     return NULL;
 }
 
 struct while_stmtNode* do_stmt()
 {
+    /*
+    struct while_stmtNode
+    {
+        struct conditionNode* condition;
+        struct bodyNode* body;
+    };
+     */
+
     // TODO: implement this
+
+    //create node
+    struct while_stmtNode* do_stm;
+
+    /**parse DO keyword**/
+    //get token
+
+    //if token is DO
+        //alloc do_stm to stack
+
+        /**parse body node**/
+
+        //get token
+        //if token is LBRACE
+            //unget token
+            //set do_stm->body to body()
+
+            /**parse WHILE keyword**/
+            //get token
+            //if token is WHILE
+                /**parse condition node**/
+
+                //if token is ID OR GREATER OR GRTEQ OR LESS OR NOTEQUAL OR LTEQ
+                    //unget token
+                    //set while_stm->condition to condition()
+
+                    /**parse SEMICOLON**/
+                    //get token
+                    //if token is SEMICOLON
+                        //return do_stm
+                    //else
+                        //syntax error
+                    //endif
+                //else
+                    //syntax error
+                //endif
+            //else
+                //syntax error
+            //endif
+
+        //else
+            //syntax error
+        //endif
+    //else
+        //syntax error
+    //endif
+
     return NULL;
 }
 
 struct primaryNode* primary()
 {
+    /*
+    struct primaryNode
+    {
+        int tag; // NUM, REALNUM or ID
+        int ival;
+        float fval;
+        char *id;
+    };
+     */
+
     // TODO: implement this
+
+    //create primary node
+    struct primaryNode* primar;
+
+    //get token
+
+    //if token type is NUM
+        //alloc primar on stack
+        //set primar->tag to NUM
+        //convert token to integer
+        //set primar->ival to converted token
+        //return primar
+    //else if token type is ID
+        //alloc primar on stack
+        //set primar->tag to ID
+        //set primar->id to token
+        //return primar
+    //else if token type is REALNUM
+        //alloc primar on stack
+        //set primar->tag to NUM
+        //convert token to float
+        //set primar->fval to converted token
+        //return primar
+    //else
+        //syntax error
+    //endif
+
     return NULL;
 }
 
 struct conditionNode* condition()
 {
+    /*
+    struct conditionNode
+    {
+        int relop;
+        struct primaryNode* left_operand;
+        struct primaryNode* right_operand;
+    };
+     */
+
     // TODO: implement this
+
+    //create condition node
+    struct conditionNode* cond;
+
+    //get token
+
+    //if type is ID
+        //alloc cond on stack
+
+        /**parse ID**/
+        //unget token
+        //set cond->relop to NOOP
+        //set cond->left_operand to primary()
+        //return cond
+    //else if type is NUM or REALNUM
+        //alloc cond on stack
+
+        /**parse first operand**/
+        //unget token
+        //set cond->left_operand to primary()
+
+        /**parse operator**/
+        //get token
+        //if token is GREATER OR GRTEQ OR LESS OR NOTEQUAL OR LTEQ
+            //set cond->relop to t_type
+
+            /**parse second operand**/
+            //get token
+
+            //if type is NUM or REALNUM
+                //unget token
+                //set cond->left_operand to primary()
+                //return cond
+            //else
+                //syntax error
+            //endif
+
+        //else
+            //syntax error
+        //endif
+
+    //else
+        //syntax error
+    //endif
+
     return NULL;
 }
 
 struct while_stmtNode* while_stmt()
 {
+    /*
+    struct while_stmtNode
+    {
+        struct conditionNode* condition;
+        struct bodyNode* body;
+    };
+     */
+
     // TODO: implement this
+    // create while statement
+    struct while_stmtNode* while_stm;
+
+    /**parse WHILE keyword**/
+    //get token
+
+    //if token is WHILE
+        //alloc while_stm to stack
+
+        /**parse condition node**/
+        //get token
+        //if token is ID OR GREATER OR GRTEQ OR LESS OR NOTEQUAL OR LTEQ
+            //unget token
+            //set while_stm->condition to condition()
+
+            /**parse body node**/
+            //get token
+
+            //if token is LBRACE
+                //unget token
+                //set while_stm->body to body()
+                //return while_stm
+            //else
+                //syntax error
+            //endif
+        //else
+            //syntax error
+        //endif
+    //else
+        //syntax error
+    //endif
+
     return NULL;
 }
 
