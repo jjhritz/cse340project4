@@ -516,7 +516,7 @@ void print_switch_stmt(struct switch_stmtNode* switc)
 {
     // TODO: implement this for your own debugging purposes
     //print "SWITCH "
-    //print switc->id + " "
+    //print switc->id + "\n"
     //print LBRACE + "\n"
     //print case_list
     //print RBRACE + "\n"
@@ -543,41 +543,74 @@ struct caseNode* cas()
 
     /**parse CASE keyword**/
     //get token
+    getToken();
 
     //if token is CASE
+    if(t_type == CASE)
+    {
         //alloc case_node on stack
+        case_node = ALLOC(struct caseNode);
 
         /**parse case NUM**/
         //get token
+        getToken();
 
         //if token is NUM
+        if(t_type == NUM)
+        {
             //convert token to integer
             //set case_node->num to converted token
+            case_node->num = atoi(token);
 
             /**parse COLON**/
             //get token
+            getToken();
 
             //if token is COLON
+            if(t_type == COLON)
+            {
                 /**parse body node**/
                 //get token
+                getToken();
 
                 //if token is LBRACE
+                if(t_type == LBRACE)
+                {
                     //unget token
+                    ungetToken();
                     //set case_node->body to body()
-                    //return case_node
-                //else
-                    //syntax error
-                //endif
-            //else
-                //syntax error
-            //endif
-        //else
-            //syntax error
-        //endif
-    //else
-        //syntax error
-    //endif
+                    case_node->body = body();
 
+                    //return case_node
+                    return case_node;
+                }
+                else
+                {
+                    //syntax error
+                    syntax_error("case. LBRACE expected");
+                }
+                //endif
+            }
+            else
+            {
+                //syntax error
+                syntax_error("case. COLON expected");
+            }
+            //endif
+        }
+        else
+        {
+            //syntax error
+            syntax_error("case. NUM expected");
+        }
+        //endif
+    }
+    else
+    {
+        //syntax error
+        syntax_error("case. CASE expected");
+    }
+    //endif
 
     return NULL;
 }
@@ -599,30 +632,49 @@ struct case_listNode* case_list()
 
     /**parse CASE keyword**/
     //get token
+    getToken();
 
     //if token is CASE
+    if(t_type == CASE)
+    {
         //alloc node on stack
+        case_list_node = ALLOC(struct casee_listNode);
 
         /**parse case node**/
         //unget token
-        //set case_list_node->case to cas()
+        ungetToken();
+        //set case_list_node->cas to cas()
+        case_list_node->cas = cas();
 
         /**parse case list node**/
         //get token
+        getToken();
 
         //if token is CASE
+        if(t_type == CASE)
+        {
             //unget token
+            ungetToken();
             //set case_list_node->case_list to case_list()
-        //else
+            case_list_node->case_list = case_list();
+        }
+        //else, there are no more cases in the list
+        else
+        {
             //unget token
+            ungetToken();
+
             //return case_list_node
+            return case_list_node;
+        }
         //endif
-
-    //else
+    }
+    else
+    {
         //syntax error
+        syntax_error("case_list. CASE expected");
+    }
     //endif
-
-
 
     return NULL;
 }
@@ -644,44 +696,83 @@ struct switch_stmtNode* switch_stmt()
 
     /**parse SWITCH keyword**/
     //get token
+    getToken();
 
     //if token is SWITCH
+    if(t_type == SWITCH)
+    {
         /**parse ID**/
         //get token
+        getToken();
 
         //if type is ID
+        if(t_type == ID)
+        {
             //copy token into switch_stm->id;
+            switch_stm->id = strdup(token);
 
             /**parse LBRACE**/
             //get token
+            getToken();
 
             //if token is LBRACE
+            if(t_type == LBRACE)
+            {
                 /**parse case list**/
                 //get token
+                getToken();
 
                 //if token is CASE
+                if(t_type == CASE)
+                {
                     //unget token
-                    //set switch_stm->case_list = case_list()
+                    ungetToken();
+                    //set switch_stm->case_list to case_list()
+                    switch_stm->case_list = case_list();
 
                     /**parse RBRACE**/
                     //get token
+                    getToken();
 
                     //if token is RBRACE
+                    if(t_type == RBRACE)
+                    {
                         //return switch_stm
-                    //else
+                        return switch_stm;
+                    }
+                    else
+                    {
                         //syntax error
+                        syntax_error("switch_stmt. RBRACE expected");
+                    }
                     //endif
-                //else
+                }
+                else
+                {
                     //syntax error
+                    syntax_error("switch_stmt. CASE expected");
+                }
                 //endif
-            //else
+            }
+            else
+            {
                 //syntax error
+                syntax_error("switch_stmt. LBRACE expected");
+            }
             //endif
-        //else
+        }
+        else
+        {
             //syntax error
+            syntax_error("switch_stmt. ID expected");
+        }
         //endif
-    //else
+    }
+    else
+    {
         //syntax error
+        syntax_error("switch_stmt. SWITCH expected");
+    }
     //endif
 
     return NULL;
@@ -704,45 +795,90 @@ struct while_stmtNode* do_stmt()
 
     /**parse DO keyword**/
     //get token
+    getToken();
 
     //if token is DO
+    if(t_type == DO)
+    {
         //alloc do_stm to stack
+        do_stm = ALLOC(struct while_stmtNode);
 
         /**parse body node**/
 
         //get token
+        getToken();
+
         //if token is LBRACE
+        if(t_type == LBRACE)
+        {
             //unget token
+            ungetToken();
             //set do_stm->body to body()
+            do_stm->body = body();
 
             /**parse WHILE keyword**/
             //get token
+            getToken();
+
             //if token is WHILE
+            if(t_type == WHILE)
+            {
                 /**parse condition node**/
+                //get token
+                getToken();
 
                 //if token is ID OR GREATER OR GRTEQ OR LESS OR NOTEQUAL OR LTEQ
+                if(t_type == ID || t_type == GREATER || t_type == GTEQ || t_type == NOTEQUAL
+                    || t_type == LTEQ)
+                {
                     //unget token
+                    ungetToken();
                     //set while_stm->condition to condition()
+                    do_stm->condition = condition();
 
                     /**parse SEMICOLON**/
                     //get token
-                    //if token is SEMICOLON
-                        //return do_stm
-                    //else
-                        //syntax error
-                    //endif
-                //else
-                    //syntax error
-                //endif
-            //else
-                //syntax error
-            //endif
+                    getToken();
 
-        //else
+                    //if token is SEMICOLON
+                    if(t_type == SEMICOLON)
+                    {
+                        //return do_stm
+                        return do_stm;
+                    }
+                    else
+                    {
+                        //syntax error
+                        syntax_error("do_stmt. SEMICOLON expected");
+                    }
+                    //endif
+                }
+                else
+                {
+                    //syntax error
+                    syntax_error("do_stmt. ID or GREATER or GTEQ or LESS or NOTEQUAL or LTEQ expected");
+                }
+                //endif
+            }
+            else
+            {
+                //syntax error
+                syntax_error("do_stmt. WHILE expected");
+            }
+            //endif
+        }
+        else
+        {
             //syntax error
+            syntax_error("do_stmt. LBRACE expected");
+        }
         //endif
-    //else
+    }
+    else
+    {
         //syntax error
+        syntax_error("do_stmt. DO expected");
+    }
     //endif
 
     return NULL;
@@ -766,26 +902,51 @@ struct primaryNode* primary()
     struct primaryNode* primar;
 
     //get token
+    getToken();
 
     //if token type is NUM
+    if(t_type == NUM)
+    {
         //alloc primar on stack
+        primar = ALLOC(struct primaryNode);
         //set primar->tag to NUM
+        primar->tag = NUM;
         //convert token to integer
         //set primar->ival to converted token
+        primar->ival = atoi(token);
         //return primar
+        return primar;
+    }
     //else if token type is ID
+    else if(t_type == ID)
+    {
         //alloc primar on stack
+        primar = ALLOC(struct primaryNode);
         //set primar->tag to ID
+        primar->tag = ID;
         //set primar->id to token
+        primar->id = strdup(token);
         //return primar
+        return primar;
+    }
     //else if token type is REALNUM
+    else if(t_type == REALNUM)
+    {
         //alloc primar on stack
+        primar = ALLOC(struct primaryNode);
         //set primar->tag to NUM
+        primar->tag = NUM;
         //convert token to float
         //set primar->fval to converted token
+        primar->fval = atof(token);
         //return primar
-    //else
+        return primar;
+    }
+    else
+    {
         //syntax error
+        syntax_error("primary. NUM or ID or REALNUM expected");
+    }
     //endif
 
     return NULL;
@@ -807,45 +968,81 @@ struct conditionNode* condition()
     //create condition node
     struct conditionNode* cond;
 
+    /**determine conditional type**/
     //get token
+    getToken();
 
     //if type is ID
+    if(t_type == ID)
+    {
         //alloc cond on stack
+        cond = ALLOC(struct conditionNode);
 
         /**parse ID**/
         //unget token
+        ungetToken();
         //set cond->relop to NOOP
+        cond->relop = NOOP;
         //set cond->left_operand to primary()
+        cond->left_operand = primary();
         //return cond
+        return cond;
+    }
     //else if type is NUM or REALNUM
+    else if(t_type == NUM || t_type == REALNUM)
+    {
         //alloc cond on stack
+        cond = ALLOC(struct conditionNode);
 
         /**parse first operand**/
         //unget token
+        ungetToken();
         //set cond->left_operand to primary()
+        cond->left_operand = primary();
 
         /**parse operator**/
         //get token
-        //if token is GREATER OR GRTEQ OR LESS OR NOTEQUAL OR LTEQ
+        getToken();
+
+        //if token is GREATER OR GTEQ OR LESS OR NOTEQUAL OR LTEQ
+        if(t_type == GREATER || t_type == GTEQ || t_type == NOTEQUAL || t_type == LTEQ)
+        {
             //set cond->relop to t_type
+            cond->relop = t_type;
 
             /**parse second operand**/
             //get token
+            getToken();
 
             //if type is NUM or REALNUM
+            if(t_type == NUM || t_type == REALNUM)
+            {
                 //unget token
-                //set cond->left_operand to primary()
+                ungetToken();
+                //set cond->right_operand to primary()
+                cond->right_operand = primary();
                 //return cond
-            //else
+                return cond;
+            }
+            else
+            {
                 //syntax error
+                syntax_error("condition. NUM or REALNUM expected");
+            }
             //endif
-
-        //else
+        }
+        else
+        {
             //syntax error
+            syntax_error("condition. GREATER or GTEQ or LESS or NOTEQUAL or LTEQ expected");
+        }
         //endif
-
-    //else
+    }
+    else
+    {
         //syntax error
+        syntax_error("condition. ID or NUM or REALNUM expected");
+    }
     //endif
 
     return NULL;
@@ -867,31 +1064,60 @@ struct while_stmtNode* while_stmt()
 
     /**parse WHILE keyword**/
     //get token
+    getToken();
 
     //if token is WHILE
+    if(t_type == WHILE)
+    {
         //alloc while_stm to stack
+        while_stm = ALLOC(struct while_stmtNode);
 
         /**parse condition node**/
         //get token
-        //if token is ID OR GREATER OR GRTEQ OR LESS OR NOTEQUAL OR LTEQ
+        getToken();
+
+        //if token is ID OR GREATER OR GTEQ OR LESS OR NOTEQUAL OR LTEQ
+        if(t_type == GREATER || t_type == GTEQ || t_type == NOTEQUAL || t_type == LTEQ)
+        {
             //unget token
+            ungetToken();
+
             //set while_stm->condition to condition()
+            while_stm->condition = condition();
 
             /**parse body node**/
             //get token
+            getToken();
 
             //if token is LBRACE
+            if(t_type == LBRACE)
+            {
                 //unget token
+                ungetToken();
                 //set while_stm->body to body()
+                while_stm->body = body();
                 //return while_stm
+                return while_stm;
+            }
             //else
+            {
                 //syntax error
+                syntax_error("while_stmt. LBRACE expected.");
+            }
             //endif
-        //else
+        }
+        else
+        {
             //syntax error
+            syntax_error("while_stmt. GREATER or GTEQ or LESS or NOTEQUAL or LTEQ expected");
+        }
         //endif
+    }
     //else
+    {
         //syntax error
+        syntax_error("while_stmt. WHILE expected.");
+    }
     //endif
 
     return NULL;
