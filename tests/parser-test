@@ -1,0 +1,35 @@
+TYPE
+  a, b : INT;
+  c : a;
+  d : STRING;
+VAR
+  x : e;
+  y : c;
+  test : d;
+{
+  a1 = 100;
+  b1 = a1 + (10 - 50);
+  foo = b1 / 50;
+  SWITCH foo
+  {
+    CASE 1:
+    {
+      foo = 0;
+    }
+    CASE 2:
+    {
+      test = test * test;
+    }
+  }
+  h = x;
+
+  WHILE a > b {
+      a = a + b;
+      a = a - b;
+  }
+  DO {
+      x = x - y;
+      x = x + b;
+      y = a;
+  } WHILE x <> b;
+}
