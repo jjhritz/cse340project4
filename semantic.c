@@ -283,12 +283,14 @@ void syntax_error(const char* msg)
 /* -------------------- PRINTING PARSE TREE -------------------- */
 void print_parse_tree(struct programNode* program)
 {
+    //printf("%d ", program->line_num);
     print_decl(program->decl);
     print_body(program->body);
 }
 
 void print_decl(struct declNode* dec)
 {
+    //printf("%d ", dec->line_num);
     if (dec->type_decl_section != NULL)
     {
         print_type_decl_section(dec->type_decl_section);
@@ -301,6 +303,7 @@ void print_decl(struct declNode* dec)
 
 void print_body(struct bodyNode* body)
 {
+    //printf("%d ", body->line_num);
     printf("{\n");
     print_stmt_list(body->stmt_list);
     printf("}\n");
@@ -308,6 +311,7 @@ void print_body(struct bodyNode* body)
 
 void print_var_decl_section(struct var_decl_sectionNode* varDeclSection)
 {
+    //printf("%d ", varDeclSection->line_num);
     printf("VAR\n");
     if (varDeclSection->var_decl_list != NULL)
     {
@@ -317,6 +321,7 @@ void print_var_decl_section(struct var_decl_sectionNode* varDeclSection)
 
 void print_var_decl_list(struct var_decl_listNode* varDeclList)
 {
+    //printf("%d ", varDeclList->line_num);
     print_var_decl(varDeclList->var_decl);
     if (varDeclList->var_decl_list != NULL)
     {
@@ -326,6 +331,7 @@ void print_var_decl_list(struct var_decl_listNode* varDeclList)
 
 void print_var_decl(struct var_declNode* varDecl)
 {
+    //printf("%d ", varDecl->line_num);
     print_id_list(varDecl->id_list);
     printf(": ");
     print_type_name(varDecl->type_name);
@@ -334,6 +340,7 @@ void print_var_decl(struct var_declNode* varDecl)
 
 void print_type_decl_section(struct type_decl_sectionNode* typeDeclSection)
 {
+    //printf("%d ", typeDeclSection->line_num);
     printf("TYPE\n");
     if (typeDeclSection->type_decl_list != NULL)
     {
@@ -343,6 +350,7 @@ void print_type_decl_section(struct type_decl_sectionNode* typeDeclSection)
 
 void print_type_decl_list(struct type_decl_listNode* typeDeclList)
 {
+    //printf("%d ", typeDeclList->line_num);
     print_type_decl(typeDeclList->type_decl);
     if (typeDeclList->type_decl_list != NULL)
     {
@@ -352,6 +360,7 @@ void print_type_decl_list(struct type_decl_listNode* typeDeclList)
 
 void print_type_decl(struct type_declNode* typeDecl)
 {
+    //printf("%d ", typeDecl->line_num);
     print_id_list(typeDecl->id_list);
     printf(": ");
     print_type_name(typeDecl->type_name);
@@ -360,6 +369,7 @@ void print_type_decl(struct type_declNode* typeDecl)
 
 void print_type_name(struct type_nameNode* typeName)
 {
+    //printf("%d ", typeName->line_num);
     if (typeName->type != ID)
     {
         printf("%s ", reserved[typeName->type]);
@@ -372,6 +382,7 @@ void print_type_name(struct type_nameNode* typeName)
 
 void print_id_list(struct id_listNode* idList)
 {
+    //printf("%d ", idList->line_num);
     printf("%s ", idList->id);
     if (idList->id_list != NULL)
     {
@@ -382,6 +393,7 @@ void print_id_list(struct id_listNode* idList)
 
 void print_stmt_list(struct stmt_listNode* stmt_list)
 {
+    //printf("%d ", stmt_list->line_num);
     print_stmt(stmt_list->stmt);
     if (stmt_list->stmt_list != NULL)
     {
@@ -392,6 +404,7 @@ void print_stmt_list(struct stmt_listNode* stmt_list)
 
 void print_assign_stmt(struct assign_stmtNode* assign_stmt)
 {
+    //printf("%d ", assign_stmt->line_num);
     printf("%s ", assign_stmt->id);
     printf("= ");
     print_expression_prefix(assign_stmt->expr);
@@ -400,6 +413,7 @@ void print_assign_stmt(struct assign_stmtNode* assign_stmt)
 
 void print_stmt(struct stmtNode* stmt)
 {
+    //printf("%d ", stmt->line_num);
     switch (stmt->stmtType)
     {
         case ASSIGN:
@@ -419,6 +433,7 @@ void print_stmt(struct stmtNode* stmt)
 
 void print_expression_prefix(struct exprNode* expr)
 {
+    //printf("%d ", expr->line_num);
     if (expr->tag == EXPR)
     {
         printf("%s ", reserved[expr->op]);
@@ -444,7 +459,7 @@ void print_expression_prefix(struct exprNode* expr)
 
 void print_while_stmt(struct while_stmtNode* while_stmt)
 {
-    // TODO: implement this for your own debugging purposes
+    //printf("%d ", while_stmt->line_num);
     //print "WHILE "
     printf("WHILE ");
 
@@ -457,7 +472,7 @@ void print_while_stmt(struct while_stmtNode* while_stmt)
 
 void print_do_stmt(struct while_stmtNode* do_stmt)
 {
-    // TODO: implement this for your own debugging purposes
+    //printf("%d ", do_stmt->line_num);
     //print "DO "
     printf("DO ");
 
@@ -474,7 +489,7 @@ void print_do_stmt(struct while_stmtNode* do_stmt)
 
 void print_condition(struct conditionNode* condition)
 {
-    // TODO: implement this for your own debugging purposes
+    //printf("%d ", condition->line_num);
     //if condition->relop is NOOP, the condition is just an ID
     if(condition->relop == NOOP)
     {
@@ -551,7 +566,7 @@ void print_condition(struct conditionNode* condition)
 
 void print_case(struct caseNode* cas)
 {
-    // TODO: implement this for your own debugging purposes
+    //printf("%d ", cas->line_num);
     //print "CASE "
     printf("CASE ");
     //print cas->num + " "
@@ -564,7 +579,7 @@ void print_case(struct caseNode* cas)
 
 void print_case_list(struct case_listNode* case_list)
 {
-    // TODO: implement this for your own debugging purposes
+    //printf("%d ", case_list->line_num);
     //print case_list->cas
     print_case(case_list->cas);
     //if case_list->case_list is not null, there are more case
@@ -577,7 +592,7 @@ void print_case_list(struct case_listNode* case_list)
 
 void print_switch_stmt(struct switch_stmtNode* switc)
 {
-    // TODO: implement this for your own debugging purposes
+    //printf("%d ", switc->line_num);
     //print "SWITCH "
     printf("SWITCH ");
     //print switc->id + "\n"
@@ -604,8 +619,6 @@ struct caseNode* cas()
     };
      */
 
-    // TODO: implement this for extra credit
-
     //create node
     struct caseNode* case_node;
 
@@ -618,6 +631,7 @@ struct caseNode* cas()
     {
         //alloc case_node on stack
         case_node = ALLOC(struct caseNode);
+        case_node->line_num = line_no;
 
         /**parse case NUM**/
         //get token
@@ -693,8 +707,6 @@ struct case_listNode* case_list()
     };
      */
 
-    // TODO: implement this for extra credit
-
     //create node
     struct case_listNode* case_list_node;
 
@@ -707,6 +719,7 @@ struct case_listNode* case_list()
     {
         //alloc node on stack
         case_list_node = ALLOC(struct case_listNode);
+        case_list_node->line_num = line_no;
 
         /**parse case node**/
         //unget token
@@ -759,8 +772,6 @@ struct switch_stmtNode* switch_stmt()
     };
     */
 
-    // TODO: implement this for extra credit
-
     //create node
     struct switch_stmtNode* switch_stm;
 
@@ -771,6 +782,10 @@ struct switch_stmtNode* switch_stmt()
     //if token is SWITCH
     if(t_type == SWITCH)
     {
+        //alloc switch_stm to stack
+        switch_stm = ALLOC(struct switch_stmtNode);
+        switch_stm->line_num = line_no;
+
         /**parse ID**/
         //get token
         t_type = getToken();
@@ -858,8 +873,6 @@ struct while_stmtNode* do_stmt()
     };
      */
 
-    // TODO: implement this
-
     //create node
     struct while_stmtNode* do_stm;
 
@@ -872,6 +885,7 @@ struct while_stmtNode* do_stmt()
     {
         //alloc do_stm to stack
         do_stm = ALLOC(struct while_stmtNode);
+        do_stm->line_num = line_no;
 
         /**parse body node**/
 
@@ -965,8 +979,6 @@ struct primaryNode* primary()
     };
      */
 
-    // TODO: implement this
-
     //create primary node
     struct primaryNode* primar;
 
@@ -978,6 +990,7 @@ struct primaryNode* primary()
     {
         //alloc primar on stack
         primar = ALLOC(struct primaryNode);
+        primar->line_num = line_no;
         //set primar->tag to NUM
         primar->tag = NUM;
         //convert token to integer
@@ -991,6 +1004,7 @@ struct primaryNode* primary()
     {
         //alloc primar on stack
         primar = ALLOC(struct primaryNode);
+        primar->line_num = line_no;
         //set primar->tag to ID
         primar->tag = ID;
         //set primar->id to token
@@ -1003,6 +1017,7 @@ struct primaryNode* primary()
     {
         //alloc primar on stack
         primar = ALLOC(struct primaryNode);
+        primar->line_num = line_no;
         //set primar->tag to NUM
         primar->tag = NUM;
         //convert token to float
@@ -1032,8 +1047,6 @@ struct conditionNode* condition()
     };
      */
 
-    // TODO: implement this
-
     //create condition node
     struct conditionNode* cond;
 
@@ -1046,6 +1059,7 @@ struct conditionNode* condition()
     {
         //alloc cond on stack
         cond = ALLOC(struct conditionNode);
+        cond->line_num = line_no;
 
         /**assign left operand**/
         //unget token
@@ -1127,7 +1141,6 @@ struct while_stmtNode* while_stmt()
     };
      */
 
-    // TODO: implement this
     // create while statement
     struct while_stmtNode* while_stm;
 
@@ -1140,6 +1153,7 @@ struct while_stmtNode* while_stmt()
     {
         //alloc while_stm to stack
         while_stm = ALLOC(struct while_stmtNode);
+        while_stm->line_num = line_no;
 
         /**parse condition node**/
         //get token
@@ -1213,7 +1227,9 @@ struct exprNode* factor()
     else if (t_type == NUM)
     {
         facto = ALLOC(struct exprNode);
+        facto->line_num = line_no;
         facto->primary = ALLOC(struct primaryNode);
+        facto->primary->line_num = line_no;
         facto->tag = PRIMARY;
         facto->op = NOOP;
         facto->leftOperand = NULL;
@@ -1225,7 +1241,9 @@ struct exprNode* factor()
     else if (t_type == REALNUM)
     {
         facto = ALLOC(struct exprNode);
+        facto->line_num = line_no;
         facto->primary = ALLOC(struct primaryNode);
+        facto->primary->line_num = line_no;
         facto->tag = PRIMARY;
         facto->op = NOOP;
         facto->leftOperand = NULL;
@@ -1237,7 +1255,9 @@ struct exprNode* factor()
     else if (t_type == ID)
     {
         facto = ALLOC(struct exprNode);
+        facto->line_num = line_no;
         facto->primary = ALLOC(struct primaryNode);
+        facto->primary->line_num = line_no;
         facto->tag = PRIMARY;
         facto->op = NOOP;
         facto->leftOperand = NULL;
@@ -1267,6 +1287,7 @@ struct exprNode* term()
         if (t_type == MULT || t_type == DIV)
         {
             ter = ALLOC(struct exprNode);
+            ter->line_num = line_no;
             ter->op = t_type;
             ter->leftOperand = f;
             ter->rightOperand = term();
@@ -1307,6 +1328,7 @@ struct exprNode* expr()
         if (t_type == PLUS || t_type == MINUS)
         {
             exp = ALLOC(struct exprNode);
+            exp->line_num = line_no;
             exp->op = t_type;
             exp->leftOperand = t;
             exp->rightOperand = expr();
@@ -1341,6 +1363,7 @@ struct assign_stmtNode* assign_stmt()
     if (t_type == ID)
     {
         assignStmt = ALLOC(struct assign_stmtNode);
+        assignStmt->line_num = line_no;
         assignStmt->id = strdup(token);
         t_type = getToken();
         if (t_type == EQUAL)
@@ -1374,9 +1397,11 @@ struct stmtNode* stmt()
     struct stmtNode* stm;
 
     stm = ALLOC(struct stmtNode);
+    stm->line_num = line_no;
     t_type = getToken();
     if (t_type == ID) // assign_stmt
     {
+
         ungetToken();
         stm->assign_stmt = assign_stmt();
         stm->stmtType = ASSIGN;
@@ -1416,6 +1441,7 @@ struct stmt_listNode* stmt_list()
     {
         ungetToken();
         stmtList = ALLOC(struct stmt_listNode);
+        stmtList->line_num = line_no;
         stmtList->stmt = stmt();
         t_type = getToken();
         if (t_type == ID || t_type == WHILE ||
@@ -1449,6 +1475,7 @@ struct bodyNode* body()
     if (t_type == LBRACE)
     {
         bod = ALLOC(struct bodyNode);
+        bod->line_num = line_no;
         bod->stmt_list = stmt_list();
         t_type = getToken();
         if (t_type == RBRACE)
@@ -1473,6 +1500,7 @@ struct type_nameNode* type_name()
     struct type_nameNode* tName;
 
     tName = ALLOC(struct type_nameNode);
+    tName->line_num = line_no;
     t_type = getToken();
     if (t_type == ID || t_type == INT || t_type == REAL ||
         t_type == STRING || t_type == BOOLEAN || t_type == LONG)
@@ -1501,6 +1529,7 @@ struct id_listNode* id_list()
     struct id_listNode* idList;
 
     idList = ALLOC(struct id_listNode);
+    idList->line_num = line_no;
     t_type = getToken();
     if (t_type == ID)
     {
@@ -1535,6 +1564,7 @@ struct type_declNode* type_decl()
     struct type_declNode* typeDecl;
 
     typeDecl = ALLOC(struct type_declNode);
+    typeDecl->line_num = line_no;
     t_type = getToken();
     if (t_type == ID)
     {
@@ -1572,6 +1602,7 @@ struct var_declNode* var_decl()
     struct var_declNode* varDecl;
 
     varDecl = ALLOC(struct var_declNode);
+    varDecl->line_num = line_no;
     t_type = getToken();
     if (t_type == ID)
     {
@@ -1609,6 +1640,7 @@ struct var_decl_listNode* var_decl_list()
     struct var_decl_listNode* varDeclList;
 
     varDeclList = ALLOC(struct var_decl_listNode);
+    varDeclList->line_num = line_no;
     t_type = getToken();
     if (t_type == ID)
     {
@@ -1641,6 +1673,7 @@ struct type_decl_listNode* type_decl_list()
     struct type_decl_listNode* typeDeclList;
 
     typeDeclList = ALLOC(struct type_decl_listNode);
+    typeDeclList->line_num = line_no;
     t_type = getToken();
     if (t_type == ID)
     {
@@ -1673,6 +1706,7 @@ struct var_decl_sectionNode* var_decl_section()
     struct var_decl_sectionNode *varDeclSection;
 
     varDeclSection = ALLOC(struct var_decl_sectionNode);
+    varDeclSection->line_num = line_no;
     t_type = getToken();
     if (t_type == VAR)
     {
@@ -1693,6 +1727,7 @@ struct type_decl_sectionNode* type_decl_section()
     struct type_decl_sectionNode *typeDeclSection;
 
     typeDeclSection = ALLOC(struct type_decl_sectionNode);
+    typeDeclSection->line_num = line_no;
     t_type = getToken();
     if (t_type == TYPE)
     {
@@ -1712,6 +1747,7 @@ struct declNode* decl()
     struct declNode* dec;
 
     dec = ALLOC(struct declNode);
+    dec->line_num = line_no;
     dec->type_decl_section = NULL;
     dec->var_decl_section = NULL;
     t_type = getToken();
@@ -1770,6 +1806,7 @@ struct programNode* program()
     struct programNode* prog;
 
     prog = ALLOC(struct programNode);
+    prog->line_num = line_no;
     t_type = getToken();
     if (t_type == TYPE || t_type == VAR || t_type == LBRACE)
     {
@@ -1784,15 +1821,4 @@ struct programNode* program()
     }
     assert(false);
     return NULL; // control never reaches here, this is just for the sake of GCC
-}
-
-int main()
-{
-    freopen("/home/student/ClionProjects/cse340project4/tests/parser-test", "r", stdin);
-    struct programNode* parseTree;
-    parseTree = program();
-    // TODO: remove the next line after you complete the parser
-    print_parse_tree(parseTree); // This is just for debugging purposes
-    // TODO: do type checking & print output according to project specification
-    return 0;
 }
