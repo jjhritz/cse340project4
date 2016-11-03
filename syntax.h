@@ -4,8 +4,24 @@
  Note: the code in this file is not to be shared with anyone or posted online.
  (c) Rida Bazzi, 2015, Adam Doupe, 2015
  ----------------------------------------------------------------------------*/
+#include <vector>
+#include "type.h"
 
 /* -------------------- PARSE TREE TYPES -------------------- */
+
+typedef enum
+{
+    END_OF_FILE = -1, VAR = 1, WHILE, INT, REAL, STRING, BOOLEAN,
+    TYPE, LONG, DO, CASE, SWITCH,
+    PLUS, MINUS, DIV, MULT, EQUAL,
+    COLON, COMMA, SEMICOLON,
+    LBRAC, RBRAC, LPAREN, RPAREN, LBRACE, RBRACE,
+    NOTEQUAL, GREATER, LESS, LTEQ, GTEQ, DOT,
+    ID, NUM, REALNUM,
+    ERROR
+} token_type;
+
+extern const char *reserved[];
 
 typedef enum {
     PRIMARY = 100,
@@ -18,6 +34,7 @@ struct programNode
 {
     struct declNode* decl;
     struct bodyNode* body;
+    int line_num;
 };
 
 struct declNode
@@ -25,63 +42,74 @@ struct declNode
     // A NULL field means that the section is empty
     struct type_decl_sectionNode* type_decl_section;
     struct var_decl_sectionNode* var_decl_section;
+    int line_num;
 };
 
 struct type_decl_sectionNode
 {
     struct type_decl_listNode* type_decl_list;
+    int line_num;
 };
 
 struct var_decl_sectionNode
 {
     struct var_decl_listNode* var_decl_list;
+    int line_num;
 };
 
 struct type_decl_listNode
 {
     struct type_declNode * type_decl;
     struct type_decl_listNode* type_decl_list;
+    int line_num;
 };
 
 struct var_decl_listNode
 {
     struct var_declNode * var_decl;
     struct var_decl_listNode* var_decl_list;
+    int line_num;
 };
 
 struct type_declNode
 {
     struct id_listNode* id_list;
     struct type_nameNode* type_name;
+    int line_num;
 };
 
 struct var_declNode
 {
     struct id_listNode* id_list;
     struct type_nameNode* type_name;
+    int line_num;
 };
 
 struct type_nameNode
 {
     int type; // INT, REAL, STRING, BOOLEAN, ID, LONG
     char* id; // actual string when type is ID
+    int line_num;
 };
 
 struct id_listNode
 {
     char * id;
     struct id_listNode* id_list;
+    int line_num;
 };
 
 struct bodyNode
 {
     struct stmt_listNode* stmt_list;
+    int line_num;
 };
 
 struct stmt_listNode
 {
     struct stmtNode* stmt;
     struct stmt_listNode * stmt_list;
+    int line_num;
 };
 
 struct stmtNode
@@ -97,6 +125,8 @@ struct stmtNode
         struct assign_stmtNode* assign_stmt;
         struct switch_stmtNode* switch_stmt;
     };
+
+    int line_num;
 };
 
 struct conditionNode
@@ -104,18 +134,21 @@ struct conditionNode
     int relop;
     struct primaryNode* left_operand;
     struct primaryNode* right_operand;
+    int line_num;
 };
 
 struct while_stmtNode
 {
     struct conditionNode* condition;
     struct bodyNode* body;
+    int line_num;
 };
 
 struct assign_stmtNode
 {
     char* id;
     struct exprNode* expr;
+    int line_num;
 };
 
 struct exprNode
@@ -125,6 +158,9 @@ struct exprNode
     struct primaryNode* primary;
     struct exprNode * leftOperand;
     struct exprNode * rightOperand;
+    int line_num;
+    string type;
+    vector<vari_t> expr_varis;
 };
 
 struct primaryNode
@@ -133,29 +169,35 @@ struct primaryNode
     int ival;
     float fval;
     char *id;
+    int line_num;
 };
 
 struct caseNode
 {
     int num;
     struct bodyNode* body;	// body of the case
+    int line_num;
 };
 
 struct case_listNode
 {
     struct caseNode* cas;	// case is a keyword in C/C++
     struct case_listNode* case_list;
+    int line_num;
 };
 
 struct switch_stmtNode
 {
     char* id;
     struct case_listNode* case_list;
+    int line_num;
 };
 
 /* -------------------- PARSE TREE FUNCTIONS -------------------- */
 
 #define ALLOC(t) (t*) calloc(1, sizeof(t))
+
+void print_parse_tree(struct programNode* program);
 
 void print_decl(struct declNode* dec);
 void print_body(struct bodyNode* body);
@@ -168,7 +210,6 @@ void print_var_decl_section(struct var_decl_sectionNode* varDeclSection);
 void print_var_decl_list(struct var_decl_listNode* varDeclList);
 void print_var_decl(struct var_declNode* varDecl);
 void print_type_name(struct type_nameNode* typeName);
-void print_id_list(struct id_listNode* idList);
 void print_id_list(struct id_listNode* idList);
 
 void print_stmt_list(struct stmt_listNode* stmt_list);
