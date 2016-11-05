@@ -1214,7 +1214,7 @@ struct exprNode* factor()
     }
     else if (t_type == NUM)
     {
-        facto = ALLOC(struct exprNode);
+        facto = new exprNode();
         facto->line_num = line_no;
         facto->primary = ALLOC(struct primaryNode);
         facto->primary->line_num = line_no;
@@ -1228,7 +1228,7 @@ struct exprNode* factor()
     }
     else if (t_type == REALNUM)
     {
-        facto = ALLOC(struct exprNode);
+        facto = new exprNode();
         facto->line_num = line_no;
         facto->primary = ALLOC(struct primaryNode);
         facto->primary->line_num = line_no;
@@ -1242,7 +1242,7 @@ struct exprNode* factor()
     }
     else if (t_type == ID)
     {
-        facto = ALLOC(struct exprNode);
+        facto = new exprNode();
         facto->line_num = line_no;
         facto->primary = ALLOC(struct primaryNode);
         facto->primary->line_num = line_no;
@@ -1274,7 +1274,7 @@ struct exprNode* term()
         t_type = getToken();
         if (t_type == MULT || t_type == DIV)
         {
-            ter = ALLOC(struct exprNode);
+            ter = new exprNode();
             ter->line_num = line_no;
             ter->op = t_type;
             ter->leftOperand = f;
@@ -1315,13 +1315,16 @@ struct exprNode* expr()
         t_type = getToken();
         if (t_type == PLUS || t_type == MINUS)
         {
-            exp = ALLOC(struct exprNode);
+            //exp = ALLOC(struct exprNode);
+            exp = new exprNode();
             exp->line_num = line_no;
             exp->op = t_type;
             exp->leftOperand = t;
             exp->rightOperand = expr();
             exp->tag = EXPR;
             exp->primary = NULL;
+            //exp->type = NULL;
+            //exp->expr_varis = new vector<vari_t>;
             return exp;
         }
         else if (t_type == SEMICOLON || t_type == MULT ||

@@ -5,29 +5,30 @@
  (c) Rida Bazzi, 2015, Adam Doupe, 2015
  ----------------------------------------------------------------------------*/
 #include <vector>
+#include <string>
 #include "type.h"
 
 /* -------------------- PARSE TREE TYPES -------------------- */
 
 typedef enum
 {
-    END_OF_FILE = -1, VAR = 1, WHILE, INT, REAL, STRING, BOOLEAN,
-    TYPE, LONG, DO, CASE, SWITCH,
-    PLUS, MINUS, DIV, MULT, EQUAL,
-    COLON, COMMA, SEMICOLON,
-    LBRAC, RBRAC, LPAREN, RPAREN, LBRACE, RBRACE,
-    NOTEQUAL, GREATER, LESS, LTEQ, GTEQ, DOT,
-    ID, NUM, REALNUM,
-    ERROR
+    END_OF_FILE = -1, VAR = 1, WHILE = 2, INT = 3, REAL = 4, STRING = 5,
+    BOOLEAN = 6, TYPE = 7, LONG = 8, DO = 9, CASE = 10, SWITCH = 11,
+    PLUS = 12, MINUS = 13, DIV = 14, MULT = 15, EQUAL = 16,
+    COLON = 17, COMMA = 18, SEMICOLON = 19, LBRAC = 20, RBRAC = 21,
+    LPAREN = 22, RPAREN = 23, LBRACE = 24, RBRACE = 25,
+    NOTEQUAL = 26, GREATER = 27, LESS = 28, LTEQ = 29, GTEQ = 30, DOT = 31,
+    ID = 32, NUM = 33, REALNUM = 34,
+    ERROR = 35
 } token_type;
 
 extern const char *reserved[];
 
 typedef enum {
     PRIMARY = 100,
-    EXPR,
-    NOOP,
-    ASSIGN
+    EXPR = 101,
+    NOOP = 102,
+    ASSIGN = 103
 } expression_type;
 
 struct programNode
@@ -161,6 +162,11 @@ struct exprNode
     int line_num;
     string type;
     vector<vari_t> expr_varis;
+
+    exprNode()
+    {
+        this->type = "";
+    };
 };
 
 struct primaryNode

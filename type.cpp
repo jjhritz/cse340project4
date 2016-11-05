@@ -17,10 +17,13 @@ vector<vari_type_t> types;
 vector<vari_t> variables;
 int found_vari;
 int found_type;
+int name_order = 0;
+
+string ANONPREFIX = "__anon__";
 
 int main()
 {
-    freopen("/home/student/ClionProjects/cse340project4/tests/parser-test", "r", stdin);
+    freopen("/home/student/ClionProjects/cse340project4/tests/error11-test01.txt", "r", stdin);
     struct programNode* parseTree;
     parseTree = program();
     print_parse_tree(parseTree); // This is just for debugging purposes
@@ -104,6 +107,12 @@ void scan_type_decl_list(struct type_decl_listNode* typeDeclList)
 
 void scan_type_decl(struct type_declNode* typeDecl)
 {
+    //generate a temporary anonymous type name
+    string anon_type = gen_anon_type();
+
+    //scan type list
+    scan_type_id_list(typeDecl->id_list, anon_type);
+
     //scan type name
     string type_name = scan_type_name(typeDecl->type_name);
 
@@ -118,8 +127,32 @@ void scan_type_decl(struct type_declNode* typeDecl)
     }
     //endif
 
-    //scan type list
-    scan_type_id_list(typeDecl->id_list, type_name);
+    /**get the base type of the declaration**/
+    //find the type
+    find_type(type_name);
+    string base_type = types[found_type].base_type;
+
+    //change the types and base types of all new types created in this declaration
+    for(int type = 0; type < types.size(); type++)
+    {
+        //if the current type's base type is the anonymous type
+        if(types[type].base_type.compare(anon_type) == 0)
+        {
+            //change the base type
+            types[type].base_type = type_name;
+
+            //add the type to the base_type's eq_names list
+            find_type(base_type);
+            types[found_type].eq_names.push_back(types[type].name);
+        }
+    }
+
+    //delete the anonymous type from the types vector
+    if(find_type(anon_type))
+    {
+        types.erase(types.begin() + found_type);
+    }
+
 }
 
 string scan_type_name(struct type_nameNode* typeName)
@@ -146,6 +179,8 @@ vari_type_t create_type(string type_name, string base_type, plicit_t plicity)
     {
         //construct vari_type_t
         vari_type_t new_type = vari_type(type_name, base_type, plicity);
+        new_type.order_pos = name_order;
+        name_order++;
 
         /**add this type to the base type's eq_names vector**/
         //if type name is not the same as the base type
@@ -180,6 +215,8 @@ void scan_type_id_list(struct id_listNode* idList, string base_type)
     {
         //create type with ID and base type as explicit
         vari_type_t new_type = create_type(type_name, base_type, EXPLICIT);
+        //add new type to types vector
+        types.push_back(new_type);
     }
     //else, type exists already; throw error
     else
@@ -238,11 +275,47 @@ void scan_var_decl_list(struct var_decl_listNode* varDeclList)
 
 void scan_var_decl(struct var_declNode* varDecl)
 {
+    //generate anonymous type
+    string anon_type = gen_anon_type();
+
+    //scan variable IDs
+    scan_var_id_list(varDecl->id_list, anon_type);
+
     //scan type name
     string var_type = scan_type_name(varDecl->type_name);
 
-    //scan variable IDs
-    scan_var_id_list(varDecl->id_list, var_type);
+    //if type name does not exist
+    if(!find_type(var_type))
+    {
+        //create type with name ID, implicit
+        vari_type_t new_type = create_type(var_type, var_type, IMPLICIT);
+
+        //add type to types vector
+        types.push_back(new_type);
+    }
+    //endif
+
+    //change the types of all new variables created in this declaration
+    for(int vari = 0; vari < variables.size(); vari++)
+    {
+        //if the current variable's type is the anonymous type
+        if(variables[vari].type.compare(anon_type) == 0)
+        {
+            //change the type
+            variables[vari].type = var_type;
+
+            //add the variable to the base_type's eq_names list
+            find_type(var_type);
+            find_type(types[found_type].base_type);
+            types[found_type].eq_names.push_back(variables[vari].name);
+        }
+    }
+
+    //delete the anonymous type from the types vector
+    if(find_type(anon_type))
+    {
+        types.erase(types.begin() + found_type);
+    }
 }
 
 void scan_var_id_list(struct id_listNode* idList, string type)
@@ -255,6 +328,15 @@ void scan_var_id_list(struct id_listNode* idList, string type)
     {
         //create new variable
         vari_t new_vari = create_vari(vari_name, type);
+
+        //if the variable type does not exist, create it implicitly
+        if(!find_type(type))
+        {
+            //create the type
+            vari_type_t new_type = create_type(type, type, IMPLICIT);
+            //push it onto the types vector
+            types.push_back(new_type);
+        }
 
         //add new variable to variables vector
         variables.push_back(new_vari);
@@ -283,6 +365,8 @@ vari_t create_vari(string vari_name, string vari_type)
     {
         //construct vari_t
         vari_t new_vari = vari(vari_name, vari_type);
+        new_vari.order_pos = name_order;
+        name_order++;
 
         /**add this variable to the type's eq_names vector**/
         find_type(vari_type);
@@ -368,16 +452,33 @@ void scan_assign_stmt(struct assign_stmtNode* assign_stmt)
     //if variable does not exist
     if(!find_vari(left_vari))
     {
-        //scan expression to determine type
-        scan_expression_prefix(assign_stmt->expr);
-        string expr_type = assign_stmt->expr->type;
-        //create variable with ID and type
-        vari_t new_vari = create_vari(left_vari, expr_type);
+        string anon_type = gen_anon_type();
+        //create variable with ID and unknown type
+        vari_t new_vari = create_vari(left_vari, anon_type);
         //add variable to variables vector
         variables.push_back(new_vari);
 
-        //union expression variables vector with program variables vector
-        variables = vector_union(variables, assign_stmt->expr->expr_varis);
+        //scan expression to determine type
+        scan_expression_prefix(assign_stmt->expr);
+        string expr_type = assign_stmt->expr->type;
+
+        //update the variable's type
+        find_vari(left_vari);
+        variables[found_vari].type = expr_type;
+
+        //update the base type's eq_names list
+        find_type(expr_type);
+        find_type(types[found_type].base_type);
+        types[found_type].eq_names.push_back(left_vari);
+
+        //if new variables appeared in expression
+        if(assign_stmt->expr->expr_varis.size() > 0)
+        {
+            //union expression variables vector with program variables vector
+            variables = vector_union(variables, assign_stmt->expr->expr_varis);
+        }
+        //endif
+
     }
     //else, variable exists and we must check its type
     else
@@ -386,10 +487,14 @@ void scan_assign_stmt(struct assign_stmtNode* assign_stmt)
         scan_expression_prefix(assign_stmt->expr);
         string expr_type = assign_stmt->expr->type;
 
-        //union expression variables vector with program variables vector
-        variables = vector_union(variables, assign_stmt->expr->expr_varis);
+        //union expression variables vector with program variables vector, if any
+        if(assign_stmt->expr->expr_varis.size() > 0)
+        {
+            variables = vector_union(variables, assign_stmt->expr->expr_varis);
+        }
 
         //get base type of both types
+        find_vari(left_vari);
         find_type(variables[found_vari].type);
         string vari_base_type = types[found_type].base_type;
 
@@ -417,8 +522,21 @@ void scan_expression_prefix(struct exprNode* expr)
         //scan expression prefix right operand
         scan_expression_prefix(expr->rightOperand);
 
-        //if left operand type is the empty string, type could not be identified from context
-        if(expr->leftOperand->type.compare("") == 0)
+        //if both have anonymous types
+        if( (expr->leftOperand->type.find(ANONPREFIX) != string::npos)
+            && (expr->rightOperand->type.find(ANONPREFIX) != string::npos)
+            )
+        {
+            /**try to resolve the types**/
+            //if they can't be resolved, types are incompatible
+            if(!resolve_types(expr->leftOperand->type, expr->rightOperand->type))
+            {
+                //throw type mismatch C2
+                type_mismatch(expr->line_num,"C2");
+            }
+        }
+        //else if left operand type is anonymous, type could not be identified from context
+        else if(expr->leftOperand->type.find(ANONPREFIX) != string::npos)
         {
             //set left operand type to right operand type
             expr->leftOperand->type = expr->rightOperand->type;
@@ -426,14 +544,24 @@ void scan_expression_prefix(struct exprNode* expr)
             //set all variables in the left expression to right operand's type
             for(int vari = 0; vari < expr->leftOperand->expr_varis.size(); vari++)
             {
-                //if the variable is the unidentified type
-                if(expr->leftOperand->expr_varis[vari].type.compare("*%#%") == 0)
+                //if the variable is an anonymous type
+                if(expr->leftOperand->expr_varis[vari].type.find(ANONPREFIX) != string::npos)
                 {
-                    //set its type to the type of the expression
-                    expr->leftOperand->expr_varis[vari].type = expr->leftOperand->type;
+                    //find and delete the anonymous type
+                    if(find_type(expr->leftOperand->expr_varis[vari].type))
+                    {
+                        types.erase(types.begin() + found_type);
+                    }
+
+                    //set the variable's type to the type of the expression
+                    expr->leftOperand->expr_varis[vari].type = expr->rightOperand->type;
+
+                    //update variable in the variable vector
+                    find_vari(expr->leftOperand->expr_varis[vari].name);
+                    variables[found_vari].type = expr->rightOperand->type;
 
                     //add it to the type's eq_names list
-                    find_type(expr->leftOperand->type);
+                    find_type(expr->rightOperand->type);
                     types[found_type].eq_names.push_back(expr->leftOperand->expr_varis[vari].name);
 
                     //add it to the type's base type's eq_names list
@@ -444,8 +572,8 @@ void scan_expression_prefix(struct exprNode* expr)
             }
             //endfor
         }
-        //else if right operand type is the empty string, type could not be identified from context
-        else if(expr->rightOperand->type.compare("") == 0)
+        //else if right operand type is anonymous, type could not be identified from context
+        else if(expr->rightOperand->type.find(ANONPREFIX) != string::npos)
         {
             //set right operand type to left operand type
             expr->rightOperand->type = expr->leftOperand->type;
@@ -453,14 +581,24 @@ void scan_expression_prefix(struct exprNode* expr)
             //set all variables in the right expression to left operand's type
             for(int vari = 0; vari < expr->rightOperand->expr_varis.size(); vari++)
             {
-                //if the variable is the unidentified type
-                if(expr->rightOperand->expr_varis[vari].type.compare("*%#%") == 0)
+                //if the variable is an anonymous type
+                if(expr->rightOperand->expr_varis[vari].type.find(ANONPREFIX) != string::npos)
                 {
+                    //find and delete the anonymous type
+                    if(find_type(expr->rightOperand->expr_varis[vari].type))
+                    {
+                        types.erase(types.begin() + found_type);
+                    }
+
                     //set its type to the type of the expression
-                    expr->rightOperand->expr_varis[vari].type = expr->rightOperand->type;
+                    expr->rightOperand->expr_varis[vari].type = expr->leftOperand->type;
+
+                    //update variable in the variable vector
+                    find_vari(expr->rightOperand->expr_varis[vari].name);
+                    variables[found_vari].type = expr->leftOperand->type;
 
                     //add it to the type's eq_names list
-                    find_type(expr->rightOperand->type);
+                    find_type(expr->leftOperand->type);
                     types[found_type].eq_names.push_back(expr->rightOperand->expr_varis[vari].name);
 
                     //add it to the type's base type's eq_names list
@@ -493,21 +631,41 @@ void scan_expression_prefix(struct exprNode* expr)
             //store base type
             r_op_base_type = types[found_type].name;
 
-            //if base types are not the same
-            if(l_op_base_type.compare(r_op_base_type) == 0)
+            //if the base types are different, figure out if they can be resolved
+            if(l_op_base_type.compare(r_op_base_type) != 0)
             {
-                //throw type mismatch error C2
-                type_mismatch(expr->line_num, "C2");
+                //if types can't be resolved
+                if(!resolve_types(expr->leftOperand->type, expr->rightOperand->type))
+                {
+                    //throw type mismatch error C2
+                    type_mismatch(expr->line_num, "C2");
+                }
+                //endif
             }
         }
         //endif
 
         /**cleanup before returning up the tree**/
-        //We should only get this far if there are no errors
+        //We should only get this far if all the types are the same
 
-        //union left and right operand variables vectors
-        //set this expression's variable vector to the union
-        expr->expr_varis = vector_union(expr->leftOperand->expr_varis, expr->rightOperand->expr_varis);
+        /**union left and right operand variables vectors
+        *set this expression's variable vector to the union**/
+        //if left expression didn't contain any variables, use the right variables
+        if(expr->leftOperand->expr_varis.size() == 0)
+        {
+            expr->expr_varis = expr->rightOperand->expr_varis;
+        }
+        //else if the right expression didn't contain any variables, use the left variables
+        else if(expr->rightOperand->expr_varis.size() == 0)
+        {
+            expr->expr_varis = expr->leftOperand->expr_varis;
+        }
+        //else, both sides contain variables and we need to union the vectors
+        else
+        {
+            expr->expr_varis = vector_union(expr->leftOperand->expr_varis, expr->rightOperand->expr_varis);
+        }
+        //endif
 
         //set expression type to left operand type
         expr->type = expr->leftOperand->type;
@@ -534,10 +692,19 @@ void scan_expression_prefix(struct exprNode* expr)
             //else, variable does not exist
             else
             {
-                //create variable with ID and type *%#%
-                vari_t new_vari = create_vari(vari_name, "*%#%");
+                //create variable with ID and anonymous type
+                string anon_type = gen_anon_type();
+                vari_type_t new_type = create_type(anon_type, anon_type, IMPLICIT);
+                types.push_back(new_type);
+
+                //create variable with ID and anonymous type
+                vari_t new_vari = create_vari(vari_name, anon_type);
+                //set expression type to this anon type
+                expr->type = anon_type;
                 //add variable to expression variables vector
                 expr->expr_varis.push_back(new_vari);
+                //add variable to variables vector
+                variables.push_back(new_vari);
             }
             //endif
         }
@@ -587,7 +754,7 @@ void scan_condition(struct conditionNode* condition)
             error_code("1.4", cond_id);
         }
         //else if ID name is variable and base type is not BOOLEAN
-        else if(find_vari(cond_id) )
+        else if(find_vari(cond_id))
         {
             find_type(variables[found_vari].type);
             if(types[found_type].base_type.compare("BOOLEAN") != 0)
@@ -615,7 +782,6 @@ void scan_condition(struct conditionNode* condition)
         string right_op_type;
         string left_op_base_type;
         string right_op_base_type;
-        vector<vari_t> untyped_varis;
 
         /**Get left operand type**/
         //if left operand's tag is ID
@@ -640,8 +806,16 @@ void scan_condition(struct conditionNode* condition)
             //else left operand's ID is not declared
             else
             {
-                //create variable with name ID and type *%#%
-                create_vari(left_op_id, "*%#%");
+                //create anonymous type
+                string anon_type = gen_anon_type();
+                vari_type_t new_type = create_type(anon_type, anon_type, IMPLICIT);
+                types.push_back(new_type);
+                left_op_type = anon_type;
+                left_op_base_type = anon_type;
+
+                //create variable with name ID and anonymous type
+                vari_t new_vari = create_vari(left_op_id, anon_type);
+                variables.push_back(new_vari);
             }
             //endif
         }
@@ -683,31 +857,51 @@ void scan_condition(struct conditionNode* condition)
             //else right operand's ID is not declared
             else
             {
-                //create variable with name ID and type *%#%
-                vari_t new_vari = create_vari(right_op_id, "*%#%");
+                //create anonymous type
+                string anon_type = gen_anon_type();
+                vari_type_t new_type = create_type(anon_type, anon_type, IMPLICIT);
+                types.push_back(new_type);
+                right_op_type = anon_type;
+                right_op_base_type = anon_type;
+
+                //create variable with name ID and anonymous type
+                vari_t new_vari = create_vari(left_op_id, anon_type);
                 variables.push_back(new_vari);
             }
             //endif
         }
-            //else if left operand's tag is NUM
-        else if(condition->left_operand->tag == NUM)
+        //else if right operand's tag is NUM
+        else if(condition->right_operand->tag == NUM)
         {
             //left operand type is INT
-            left_op_type = "INT";
-            left_op_base_type = "INT";
+            right_op_type = "INT";
+            right_op_base_type = "INT";
         }
-            //else if left operand's tag is REALNUM
+        //else if right operand's tag is REALNUM
         else if(condition->left_operand->tag == NUM)
         {
             //left operand type is REAL
-            left_op_type = "REAL";
-            left_op_base_type = "REAL";
+            right_op_type = "REAL";
+            right_op_base_type = "REAL";
         }
         //endif
 
         /**check for type equivalence**/
-        //if left operand type is *%#%
-        if(left_op_type.compare("*%#%") == 0)
+        //if both left and right operands are anonymous types
+        if( (left_op_type.find(ANONPREFIX) != string::npos)
+            &&(right_op_type.find(ANONPREFIX) != string::npos)
+            )
+        {
+            //try to resolve the types
+            if(!resolve_types(left_op_type, right_op_type))
+            {
+                //throw type mismatch C3
+                type_mismatch(condition->line_num,"C3");
+            }
+        }
+        //endif
+        //else if left operand type is an anonymous type
+        else if(left_op_type.find(ANONPREFIX) != string::npos)
         {
             //set left operand type to right operand type
             left_op_type = right_op_type;
@@ -716,8 +910,8 @@ void scan_condition(struct conditionNode* condition)
             find_vari(left_op_id);
             variables[found_vari].type = left_op_type;
         }
-        //else if right operand type is *%#%
-        else if(right_op_type.compare("*%#%") == 0)
+        //else if right operand type is an anonymous type
+        else if(right_op_type.find(ANONPREFIX) != string::npos)
         {
             //set right operand type to left operand type
             right_op_type = left_op_type;
@@ -726,14 +920,17 @@ void scan_condition(struct conditionNode* condition)
             find_vari(right_op_id);
             variables[found_vari].type = right_op_type;
         }
-        //else, check type equivalence
+        //else, try to resolve the types
         else
         {
             //if left operand base type is not equal to the right operand base type
             if(left_op_base_type.compare(right_op_base_type) != 0)
             {
-                //throw type mismatch error C3
-                type_mismatch(condition->line_num, "C3");
+                if (!resolve_types(left_op_type, right_op_type))
+                {
+                    //throw type mismatch error C3
+                    type_mismatch(condition->line_num, "C3");
+                }
             }
         }
         //endif
@@ -770,17 +967,30 @@ void scan_switch_stmt(struct switch_stmtNode* switc)
         //throw error 1.4
         error_code("1.4", switch_id);
     }
-    //else if switch ID is a variable name AND the base type is not an INT
-    else if(find_vari(switch_id) && find_type(variables[found_vari].type) != INT)
+    //else switch ID is a variable name
+    else if(find_vari(switch_id))
     {
-        //throw type mismatch C5
-        type_mismatch(switc->line_num, "C5");
+        //find variable's base type
+        find_type(variables[found_vari].type);
+        string base_type = types[found_type].base_type;
+
+        //if base type is not INT, try to resolve type
+        if(base_type.compare("INT") != 0)
+        {
+            //if types are incompatible
+            if(!resolve_types("INT", types[found_type].name))
+            {
+                //throw type mismatch C5
+                type_mismatch(switc->line_num, "C5");
+            }
+        }
     }
     //else, ID is a new variable that must be type INT
     else
     {
         //create variable with name ID and type INT
-        create_vari(switch_id, "INT");
+        vari_t new_vari = create_vari(switch_id, "INT");
+        variables.push_back(new_vari);
     }
     //endif
 
@@ -931,7 +1141,7 @@ void error_code(string error, string symbol)
 
 void type_mismatch(int line, string constraint)
 {
-    cout << "TYPE MISMATCH" << line << constraint << endl;
+    cout << "TYPE MISMATCH " << line << " " << constraint << endl;
     exit(1);
 }
 
@@ -969,11 +1179,10 @@ bool find_element(string symbol, vector<vari_t> vector1)
 
 vector<vari_t> vector_union(vector<vari_t> vector1, vector<vari_t> vector2)
 {
-    vector<vari_t> union_vector(20);     //vector that will store union of vector1 and vector2; starts with 20 dummy elements
+    vector<vari_t> union_vector;     //vector that will store union of vector1 and vector2;
 
     //load vector 1 into the union vector
     union_vector.assign(vector1.begin(), vector1.end());
-    union_vector.shrink_to_fit();
 
     //for all elements in vector2
     for(int element = 0; element < vector2.size(); element++)
@@ -987,6 +1196,242 @@ vector<vari_t> vector_union(vector<vari_t> vector1, vector<vari_t> vector2)
         //endif
     }
     //endfor
+}
+
+vector<string> vector_union(vector<string> vector1, vector<string> vector2)
+{
+    vector<string> union_vector;     //vector that will store union of vector1 and vector2;
+
+    //load vector 1 into the union vector
+    union_vector.assign(vector1.begin(), vector1.end());
+
+    //for all elements in vector2
+    for(int element = 0; element < vector2.size(); element++)
+    {
+        //if element does not exist in union vector
+        if(find(union_vector.begin(), union_vector.end(), vector2[element]) == union_vector.end())
+        {
+            //add element to end of union vector
+            union_vector.push_back(vector2[element]);
+        }
+        //endif
+    }
+    //endfor
+}
+
+//Helper function for sorting names
+bool compare_name_by_order(const string a, const string b)
+{
+    int a_pos;
+    int b_pos;
+
+    if(find_type(a))
+    {
+        a_pos = types[found_type].order_pos;
+    }
+    else if(find_vari(a))
+    {
+        a_pos = variables[found_vari].order_pos;
+    }
+
+    if(find_type(b))
+    {
+        b_pos = types[found_type].order_pos;
+    }
+    else if(find_vari(b))
+    {
+        b_pos = variables[found_vari].order_pos;
+    }
+
+    if (a_pos < b_pos)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+string gen_anon_type()
+{
+    return ANONPREFIX + to_string(rand());
+}
+
+bool resolve_types(string lt, string rt)
+{
+    //store positions of types and base types
+    find_type(lt);
+    int lti = found_type;
+    string lbt = types[lti].base_type;
+    find_type(lbt);
+    int lbti = found_type;
+
+    find_type(rt);
+    int rti = found_type;
+    string rbt = types[rti].base_type;
+    find_type(rbt);
+    int rbti = found_type;
+
+    //if left operand base type is BOOLEAN, INT, LONG, REAL, or STRING
+    //and right operand is not
+    if(     (  (lbt.compare("BOOLEAN") == 0)
+               || (lbt.compare("INT") == 0)
+               || (lbt.compare("LONG") == 0)
+               || (lbt.compare("REAL") == 0)
+               || (lbt.compare("STRING") == 0)
+            )
+            &&
+            (  (rbt.compare("BOOLEAN") != 0)
+               && (rbt.compare("INT") != 0)
+               && (rbt.compare("LONG") != 0)
+               && (rbt.compare("REAL") != 0)
+               && (rbt.compare("STRING") != 0)
+            )
+            )
+    {
+
+        /**add right operand's base type and right operand's base type's eq_names
+        * to left operand's base type's eq_names**/
+        //ad
+        types[lbti].eq_names.push_back(types[rti].base_type);
 
 
+        //if left operator's base type eq_names is empty
+        if(types[lbti].eq_names.size() == 0)
+        {
+            //copy the right operand's vector
+            types[lbti].eq_names.assign(types[rbti].eq_names.begin(), types[rbti].eq_names.end());
+        }
+        //else if the right operator's base type eq_names is not empty
+        else if(types[rbti].eq_names.size() != 0)
+        {
+            //union the vectors
+            types[lbti].eq_names = vector_union(types[lbti].eq_names, types[rbti].eq_names);
+        }
+
+        //make right operand's base type left operand's base type
+        types[rbti].base_type = lbt;
+
+        return true;
+    }
+        //else if right operand base type is BOOLEAN, INT, LONG, REAL, STRING
+        //and left operand is not
+    else if((  (rbt.compare("BOOLEAN") == 0)
+               || (rbt.compare("INT") == 0)
+               || (rbt.compare("LONG") == 0)
+               || (rbt.compare("REAL") == 0)
+               || (rbt.compare("STRING") == 0)
+            )
+            &&
+            (  (lbt.compare("BOOLEAN") != 0)
+               && (lbt.compare("INT") != 0)
+               && (lbt.compare("LONG") != 0)
+               && (lbt.compare("REAL") != 0)
+               && (lbt.compare("STRING") != 0)
+            )
+            )
+    {
+
+        /**add left operand's base type and left operand's base type's eq_names
+         * to right operand's base type's eq_names**/
+        types[rbti].eq_names.push_back(types[lti].base_type);
+
+        //if right operator's base type eq_names is empty
+        if(types[rbti].eq_names.size() == 0)
+        {
+            //copy the left operand's vector
+            types[rbti].eq_names.assign(types[lbti].eq_names.begin(),
+                                                      types[lbti].eq_names.end());
+        }
+        //else if the left operator's base type eq_names is not empty
+        else if(types[lbti].eq_names.size() != 0)
+        {
+            //union the vectors
+            types[rbti].eq_names = vector_union(types[rbti].eq_names,
+                                                types[lbti].eq_names);
+        }
+
+        //make left operand's base type right operand's base type
+        types[lti].base_type = rbt;
+
+        return true;
+    }
+    //else, if neither type can be resolved to a built-in type, resolve to the "older" type
+        //this should help condense anonymous types
+    else if((  !(rbt.compare("BOOLEAN") == 0)
+               || (rbt.compare("INT") == 0)
+               || (rbt.compare("LONG") == 0)
+               || (rbt.compare("REAL") == 0)
+               || (rbt.compare("STRING") == 0)
+            )
+            &&
+            (  (lbt.compare("BOOLEAN") != 0)
+               && (lbt.compare("INT") != 0)
+               && (lbt.compare("LONG") != 0)
+               && (lbt.compare("REAL") != 0)
+               && (lbt.compare("STRING") != 0)
+            )
+            )
+    {
+        //if left base type came first, resolve to left base type
+        if(types[lbti].order_pos < types[rbti].order_pos)
+        {
+            /**add right operand's base type and right operand's base type's eq_names
+            * to left operand's base type's eq_names**/
+            //ad
+            types[lbti].eq_names.push_back(types[rti].base_type);
+
+
+            //if left operator's base type eq_names is empty
+            if(types[lbti].eq_names.size() == 0)
+            {
+                //copy the right operand's vector
+                types[lbti].eq_names.assign(types[rbti].eq_names.begin(), types[rbti].eq_names.end());
+            }
+                //else if the right operator's base type eq_names is not empty
+            else if(types[rbti].eq_names.size() != 0)
+            {
+                //union the vectors
+                types[lbti].eq_names = vector_union(types[lbti].eq_names, types[rbti].eq_names);
+            }
+
+            //make right operand's base type left operand's base type
+            types[rbti].base_type = lbt;
+
+            return true;
+        }
+        //else, right base type came first, resolve to right base type
+        else
+        {
+            /**add left operand's base type and left operand's base type's eq_names
+            * to right operand's base type's eq_names**/
+            types[rbti].eq_names.push_back(types[lti].base_type);
+
+            //if right operator's base type eq_names is empty
+            if(types[rbti].eq_names.size() == 0)
+            {
+                //copy the left operand's vector
+                types[rbti].eq_names.assign(types[lbti].eq_names.begin(),
+                                            types[lbti].eq_names.end());
+            }
+                //else if the left operator's base type eq_names is not empty
+            else if(types[lbti].eq_names.size() != 0)
+            {
+                //union the vectors
+                types[rbti].eq_names = vector_union(types[rbti].eq_names,
+                                                    types[lbti].eq_names);
+            }
+
+            //make left operand's base type right operand's base type
+            types[lti].base_type = rbt;
+
+            return true;
+        }
+    }
+    //else, base type mismatch
+    else
+    {
+        return false;
+    }
 }
