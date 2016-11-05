@@ -123,5 +123,6 @@ vector<string> vector_union(vector<string> vector1, vector<string> vector2);
 bool compare_name_by_order(const string a, const string b);
 string gen_anon_type();
 bool resolve_types(string bt1, string bt2);
+void update_eq_names(string type);
 
 #endif //CSE340PROJECT4_TYPE_H
