@@ -129,7 +129,6 @@ void scan_type_decl(struct type_declNode* typeDecl)
     find_type(type_name);
     string base_type = types[found_type].base_type;
 
-    //TODO: Figure out how to isolate the types created in this declaration
     //change the base types of all new types created in this declaration
     id_listNode* cur_id_list = typeDecl->id_list;
 
@@ -409,6 +408,7 @@ void scan_stmt_list(struct stmt_listNode* stmt_list)
 
 void scan_stmt(struct stmtNode* stmt)
 {
+    //TODO: figure out type resolution between untype variables in expressions
     //switch stmt
     switch(stmt->stmtType)
     {
@@ -497,11 +497,19 @@ void scan_assign_stmt(struct assign_stmtNode* assign_stmt)
         find_type(expr_type);
         string expr_base_type = types[found_type].base_type;
 
-        //if the the base types are not the same and it's an assignment type violation
+        //if the the base types are not the same, try to resolve the types
         if(vari_base_type.compare(expr_base_type) != 0)
         {
-            //type mismatch C1
-            type_mismatch(assign_stmt->line_num, "C1");
+            //get variable types
+            find_vari(left_vari);
+            string vari_type = variables[found_vari].name;
+
+            //if the types can't be resolved
+            if(!resolve_types(left_vari, expr_type))
+            {
+                //type mismatch C1
+                type_mismatch(assign_stmt->line_num, "C1");
+            }
         }
         //endif
     }
@@ -1321,7 +1329,6 @@ bool resolve_types(string lt, string rt)
         //make right operand's base type left operand's base type
         types[rbti].base_type = lbt;
 
-        //TODO: index through all names and make sure to set base types of types
         /**index through all names and make sure to set base types of types**/
 
         /**index through all names and make sure to set base types of types**/
@@ -1377,7 +1384,6 @@ bool resolve_types(string lt, string rt)
         //make left operand's base type right operand's base type
         types[lti].base_type = rbt;
 
-        //TODO: index through all names and make sure to set base types of types
         /**index through all names and make sure to set base types of types**/
 
         for(int name = 0; name < types[rbti].eq_names.size(); name++)
@@ -1433,7 +1439,6 @@ bool resolve_types(string lt, string rt)
             //make right operand's base type left operand's base type
             types[rbti].base_type = lbt;
 
-            //TODO: index through all names and make sure to set base types of types
             /**index through all names and make sure to set base types of types**/
             for(int name = 0; name < types[lbti].eq_names.size(); name++)
             {
@@ -1472,7 +1477,6 @@ bool resolve_types(string lt, string rt)
             //make left operand's base type right operand's base type
             types[lti].base_type = rbt;
 
-            //TODO: index through all names and make sure to set base types of types
             /**index through all names and make sure to set base types of types**/
             for(int name = 0; name < types[rbti].eq_names.size(); name++)
             {
