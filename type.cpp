@@ -23,7 +23,7 @@ string ANONPREFIX = "__anon__";
 
 int main()
 {
-    freopen("/home/student/ClionProjects/cse340project4/tests/semantic_test23.txt", "r", stdin);
+    freopen("/home/student/ClionProjects/cse340project4/tests/semantic_test39.txt", "r", stdin);
     struct programNode* parseTree;
     parseTree = program();
     print_parse_tree(parseTree); // This is just for debugging purposes
@@ -107,11 +107,8 @@ void scan_type_decl_list(struct type_decl_listNode* typeDeclList)
 
 void scan_type_decl(struct type_declNode* typeDecl)
 {
-    //generate a temporary anonymous type name
-    string anon_type = gen_anon_type();
-
     //scan type list
-    scan_type_id_list(typeDecl->id_list, anon_type);
+    scan_type_id_list(typeDecl->id_list);
 
     //scan type name
     string type_name = scan_type_name(typeDecl->type_name);
@@ -132,27 +129,25 @@ void scan_type_decl(struct type_declNode* typeDecl)
     find_type(type_name);
     string base_type = types[found_type].base_type;
 
-    //change the types and base types of all new types created in this declaration
-    for(int type = 0; type < types.size(); type++)
+    //TODO: Figure out how to isolate the types created in this declaration
+    //change the base types of all new types created in this declaration
+    id_listNode* cur_id_list = typeDecl->id_list;
+
+    //while there's IDs in this list
+    while(cur_id_list != NULL)
     {
-        //if the current type's base type is the anonymous type
-        if(types[type].base_type.compare(anon_type) == 0)
-        {
-            //change the base type
-            types[type].base_type = type_name;
+        //find the type with the ID
+        find_type(cur_id_list->id);
 
-            //add the type to the base_type's eq_names list
-            find_type(base_type);
-            types[found_type].eq_names.push_back(types[type].name);
-        }
+        //change its base type to be this declared type
+        types[found_type].base_type = base_type;
+
+        //add this type to the base_type's eq_names vector
+        find_type(base_type);
+        types[found_type].eq_names.push_back(cur_id_list->id);
+
+        cur_id_list = cur_id_list->id_list;
     }
-
-    //delete the anonymous type from the types vector
-    if(find_type(anon_type))
-    {
-        types.erase(types.begin() + found_type);
-    }
-
 }
 
 string scan_type_name(struct type_nameNode* typeName)
@@ -205,7 +200,7 @@ vari_type_t create_type(string type_name, string base_type, plicit_t plicity)
     //endif
 }
 
-void scan_type_id_list(struct id_listNode* idList, string base_type)
+void scan_type_id_list(struct id_listNode* idList)
 {
     //get type name ID
     string type_name = idList->id;
@@ -213,8 +208,8 @@ void scan_type_id_list(struct id_listNode* idList, string base_type)
     //if type does not exist
     if(!find_type(type_name))
     {
-        //create type with ID and base type as explicit
-        vari_type_t new_type = create_type(type_name, base_type, EXPLICIT);
+        //create type with ID as type as explicit
+        vari_type_t new_type = create_type(type_name, type_name, EXPLICIT);
         //add new type to types vector
         types.push_back(new_type);
     }
@@ -241,7 +236,7 @@ void scan_type_id_list(struct id_listNode* idList, string base_type)
     if(idList->id_list != NULL)
     {
         //scan type ID list
-        scan_type_id_list(idList->id_list, base_type);
+        scan_type_id_list(idList->id_list);
     }
     //endif
 }
