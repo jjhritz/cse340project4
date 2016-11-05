@@ -23,7 +23,7 @@ string ANONPREFIX = "__anon__";
 
 int main()
 {
-    freopen("/home/student/ClionProjects/cse340project4/tests/error11-test01.txt", "r", stdin);
+    freopen("/home/student/ClionProjects/cse340project4/tests/semantic_test23.txt", "r", stdin);
     struct programNode* parseTree;
     parseTree = program();
     print_parse_tree(parseTree); // This is just for debugging purposes
@@ -326,9 +326,6 @@ void scan_var_id_list(struct id_listNode* idList, string type)
     //if variable ID is not a type name
     if(!find_type(vari_name))
     {
-        //create new variable
-        vari_t new_vari = create_vari(vari_name, type);
-
         //if the variable type does not exist, create it implicitly
         if(!find_type(type))
         {
@@ -337,6 +334,9 @@ void scan_var_id_list(struct id_listNode* idList, string type)
             //push it onto the types vector
             types.push_back(new_type);
         }
+
+        //create new variable
+        vari_t new_vari = create_vari(vari_name, type);
 
         //add new variable to variables vector
         variables.push_back(new_vari);
@@ -393,6 +393,7 @@ vari_t create_vari(string vari_name, string vari_type)
         error_code("2.1", vari_name);
     }
     //endif
+
 }
 
 
@@ -1017,9 +1018,16 @@ void print_type_list()
 
 void print_type(vari_type_t* type)
 {
+    //if type is not anonymous
+    if(type->name.find(ANONPREFIX) == string::npos)
+    {
+        //print type name
+        cout << type->name << " ";
+    }
+    //endif
 
-    //print type name
-    cout << type->name << " ";
+    //sort eq_names based on appearance order
+    sort(type->eq_names.begin(), type->eq_names.end(), compare_name_by_order);
 
     //for all equivalent names in type.eq_names
     for(int name = 0; name < type->eq_names.size(); name++)
@@ -1030,10 +1038,11 @@ void print_type(vari_type_t* type)
             )
         {
             //print name + " "
-            cout << type->eq_names[name]<< " ";
+            cout << type->eq_names[name] << " ";
             //mark name as printed
             flag_printed(type->eq_names[name]);
         }
+        //endif
     }
     //endfor
 
@@ -1196,11 +1205,13 @@ vector<vari_t> vector_union(vector<vari_t> vector1, vector<vari_t> vector2)
         //endif
     }
     //endfor
+
+    return union_vector;
 }
 
 vector<string> vector_union(vector<string> vector1, vector<string> vector2)
 {
-    vector<string> union_vector;     //vector that will store union of vector1 and vector2;
+    vector<string> union_vector(1);     //vector that will store union of vector1 and vector2;
 
     //load vector 1 into the union vector
     union_vector.assign(vector1.begin(), vector1.end());
@@ -1217,6 +1228,8 @@ vector<string> vector_union(vector<string> vector1, vector<string> vector2)
         //endif
     }
     //endfor
+
+    return union_vector;
 }
 
 //Helper function for sorting names
@@ -1313,10 +1326,24 @@ bool resolve_types(string lt, string rt)
         //make right operand's base type left operand's base type
         types[rbti].base_type = lbt;
 
+        //TODO: index through all names and make sure to set base types of types
+        /**index through all names and make sure to set base types of types**/
+
+        /**index through all names and make sure to set base types of types**/
+        for(int name = 0; name < types[lbti].eq_names.size(); name++)
+        {
+            //if name is a type
+            if(find_type(types[lbti].eq_names[name]))
+            {
+                types[found_type].base_type = lbt;
+            }
+        }
+
+
         return true;
     }
-        //else if right operand base type is BOOLEAN, INT, LONG, REAL, STRING
-        //and left operand is not
+    //else if right operand base type is BOOLEAN, INT, LONG, REAL, STRING
+    //and left operand is not
     else if((  (rbt.compare("BOOLEAN") == 0)
                || (rbt.compare("INT") == 0)
                || (rbt.compare("LONG") == 0)
@@ -1354,6 +1381,18 @@ bool resolve_types(string lt, string rt)
 
         //make left operand's base type right operand's base type
         types[lti].base_type = rbt;
+
+        //TODO: index through all names and make sure to set base types of types
+        /**index through all names and make sure to set base types of types**/
+
+        for(int name = 0; name < types[rbti].eq_names.size(); name++)
+        {
+            //if name is a type
+            if(find_type(types[rbti].eq_names[name]))
+            {
+                types[found_type].base_type = rbt;
+            }
+        }
 
         return true;
     }
@@ -1399,6 +1438,18 @@ bool resolve_types(string lt, string rt)
             //make right operand's base type left operand's base type
             types[rbti].base_type = lbt;
 
+            //TODO: index through all names and make sure to set base types of types
+            /**index through all names and make sure to set base types of types**/
+            for(int name = 0; name < types[lbti].eq_names.size(); name++)
+            {
+                //if name is a type
+                if(find_type(types[lbti].eq_names[name]))
+                {
+                    types[found_type].base_type = lbt;
+                }
+            }
+
+
             return true;
         }
         //else, right base type came first, resolve to right base type
@@ -1425,6 +1476,17 @@ bool resolve_types(string lt, string rt)
 
             //make left operand's base type right operand's base type
             types[lti].base_type = rbt;
+
+            //TODO: index through all names and make sure to set base types of types
+            /**index through all names and make sure to set base types of types**/
+            for(int name = 0; name < types[rbti].eq_names.size(); name++)
+            {
+                //if name is a type
+                if(find_type(types[rbti].eq_names[name]))
+                {
+                    types[found_type].base_type = rbt;
+                }
+            }
 
             return true;
         }

@@ -95,7 +95,7 @@ void scan_var_decl(struct var_declNode* varDecl);
 string scan_type_name(struct type_nameNode* typeName);
 vari_type_t create_type(string type_name, string base_type, plicit_t plicity);
 void scan_type_id_list(struct id_listNode* idList, string base_type);
-void scan_var_id_list(struct id_listNode* idList, string type);
+void scan_var_id_list(struct id_listNode* idList);
 vari_t create_vari(string vari_name, string vari_type);
 
 void scan_stmt_list(struct stmt_listNode* stmt_list);
